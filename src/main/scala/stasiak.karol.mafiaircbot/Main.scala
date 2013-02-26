@@ -103,6 +103,7 @@ object Main {
               case "!help" | "!mafiahelp" | "!h" => conn.msgUser(sender, HELP)
               case "!votes" => conn.msgUser(sender,bot.votes())
               case "!roles" => conn.msgUser(sender,bot.roles())
+              case _ => 
             }
           case _ =>
         }
