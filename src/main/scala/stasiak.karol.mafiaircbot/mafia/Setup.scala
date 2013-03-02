@@ -1,6 +1,9 @@
 package stasiak.karol.mafiaircbot.mafia
 import scala.util.Random
 import java.util.Locale
+
+import stasiak.karol.mafiaircbot.common.GameStatus
+
 object Setup {
   def apply(descriptor: String) = descriptor match {
     case x if x.startsWith("/") => try{

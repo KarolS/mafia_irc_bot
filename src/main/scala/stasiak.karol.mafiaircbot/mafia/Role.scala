@@ -155,6 +155,7 @@ abstract class PassiveRole extends Role {
 abstract class BombRole extends Role {
   val order = 1
   val numberOfTargets = 0
+  override def isADangerousTownie = alignment == Town
   def process(player: Player, game: Game) {
     if(player.health<0){
       game.players.values.filter{ p=>
@@ -191,7 +192,7 @@ abstract class DriverRole extends Role {
   }
   def process(player: Player, game: Game) {
     player.target match {
-      case List("", _) | List(_,"") => ()
+      case List("", _) | List(_,"") | Nil=> ()
       case List(t1,t2) => 
         val driveF = drive(t1,t2)_
         game.players.values.foreach{ p=>

@@ -49,7 +49,7 @@ class IrcConnection(params: List[String]) extends Connection{
   paramMap.get("password").foreach{
     pass(_)
   }
-  Thread.sleep(5000)
+  Thread.sleep(3000)
   if(paramMap.keys.exists(_=="nickserv") ^ paramMap.keys.exists(_=="message")){
     throw new IllegalArgumentException("You need to specify both authentication message and nickserv username, or none")
   } else {
@@ -57,14 +57,12 @@ class IrcConnection(params: List[String]) extends Connection{
       msgUser(_, paramMap("message"))
     }
   }
+  //Thread.sleep(5000)
 
   channelPassword match {
     case Some(p) =>join(p)
     case None => join()
   }
-  msgChannel("Hello scum!")
-  msgChannel("The Great And Powerful Mafia Bot is here!")
-  msgChannel("Type !mafiahelp to receive basic information about how to interact with the bot.")
 
     
     
@@ -91,7 +89,9 @@ class IrcConnection(params: List[String]) extends Connection{
   def msgChannel(msgs: Seq[String]){
     msgs.foreach{
       case "<delay>" => Thread.sleep(500)
-      case msg => sender(s"PRIVMSG $channel :$msg")
+      case msg => 
+        Thread.sleep(100)
+        sender(s"PRIVMSG $channel :$msg")
     }
   }
   

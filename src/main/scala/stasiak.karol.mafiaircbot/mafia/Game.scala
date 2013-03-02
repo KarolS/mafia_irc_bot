@@ -1,27 +1,27 @@
 package stasiak.karol.mafiaircbot.mafia
 import java.util.Locale
-
-object GameStatus extends Enumeration {
-  type GameStatus = Value
-  val Signups, Running, Over = Value
-}
-import GameStatus._
+import stasiak.karol.mafiaircbot.common.GameStatus._
 import Alignment._
-class Game(val owner: String){
-  var status = Signups
-  var signedupPlayers = Set[String]()
+import stasiak.karol.mafiaircbot.common.AbstractGame
+class Game(_owner: String)extends AbstractGame(_owner){
+  
   var publicNightEvents = List[String]()
+  
   var players = Map[String,Player]()
   var votes = Map[String,String]()
+  
   var mafiaTargets: Option[List[(String, String)]] = None
   var werewolfTargets: Option[List[(String, String)]]= None
+  
   var night = false
+  
   var mafiaNightKills = 1
   var werewolfNightKills = 1
-  var jesterKillRatio = 0.5
-  var askedForEnding = Set[String]()
-  var endGameAt = Long.MaxValue
+  
+  var phaseNo = 0
+  
   def newNight(){
+    phaseNo+=1
     night = true
     publicNightEvents = Nil
     mafiaTargets = None
@@ -31,14 +31,20 @@ class Game(val owner: String){
     players.values.foreach(_.prepareForNight())
   }
   def newDay() = {
+    phaseNo+=1
     val minOrder = players.values.map(_.role.order).min
     val maxOrder = players.values.map(_.role.order).max
-    for( o <- minOrder to maxOrder ; (name,player) <- players; if player.alive && player.role.order == o){
-      player.process(this)
+    for( o <- minOrder to maxOrder){
+      for((name,player) <- players; if player.alive && player.role.order == o){
+        player.process(this)
+      }
+      if(o == 0){
+        (mafiaTargets.getOrElse(Nil)++werewolfTargets.getOrElse(Nil)).map(_._2).foreach{ target =>
+          players(target).health -= 1
+        }
+      }
     }
-    (mafiaTargets.getOrElse(Nil)++werewolfTargets.getOrElse(Nil)).map(_._2).foreach{ target =>
-      players(target).health -= 1
-    }
+    
     for((name,player) <- players ; if player.alive){
       if(player.health<0){
         player.alive = false
@@ -69,7 +75,8 @@ class Game(val owner: String){
       else if(werevolvesAreAlive && werewolfTargets.isEmpty) false
       else players.values.forall(p=>p.doneHisTurn(this))
     } else {
-      players.values.filter(_.alive).forall(_.vote.isDefined) || {
+      if(System.currentTimeMillis() > this.endGameAt) true
+      else players.values.filter(_.alive).forall(_.vote.isDefined) || {
         val votes = players.values.filter(_.alive).collect{_.vote match { case Some(i) => i}}
         val maxVoteCount = (votes.groupBy(identity).map{case (_,vs)=>vs.size}.toList:+0).max
         maxVoteCount*2 > players.values.filter(_.alive).size
